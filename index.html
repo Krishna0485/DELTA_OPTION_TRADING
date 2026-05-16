@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delta Exchange India — Live Options Terminal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#0d0f14;color:#e8ecf4;min-height:100vh;padding:12px}
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #252b3b}
+.logo{width:36px;height:36px;border-radius:9px;background:#f7931a;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0}
+.brand-t{font-size:14px;font-weight:700;color:#e8ecf4}
+.brand-s{font-size:11px;color:#7a8499;margin-top:1px}
+.live-pill{display:flex;align-items:center;gap:5px;background:#0a2a1a;border:1px solid #00d97e44;border-radius:99px;padding:4px 11px;font-size:11px;font-weight:700;color:#00d97e}
+.dot{width:7px;height:7px;border-radius:50%;background:#00d97e;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.asset-grp{display:flex;gap:4px;background:#1a1e2a;border-radius:99px;padding:3px}
+.abtn{font-size:12px;font-weight:700;padding:5px 20px;border-radius:99px;border:none;cursor:pointer;color:#7a8499;background:transparent;transition:all .15s}
+.abtn.on{background:#f7931a;color:#fff}
+
+/* STATUS */
+.status-bar{border-radius:9px;padding:9px 14px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:12px;border:1px solid}
+.status-ok{background:#001a0f;border-color:#00d97e44;color:#00d97e}
+.status-err{background:#2a0010;border-color:#ff4d6a44;color:#ff4d6a}
+.status-load{background:#0a1a2a;border-color:#4f8ef744;color:#4f8ef7}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
+.mc{background:#141720;border:1px solid #252b3b;border-radius:10px;padding:11px 13px}
+.mc-lbl{font-size:10px;font-weight:500;color:#7a8499;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.mc-val{font-size:17px;font-weight:700;color:#e8ecf4;line-height:1}
+.mc-sub{font-size:10px;margin-top:3px;font-weight:500}
+.mc-bar{height:3px;border-radius:2px;background:#252b3b;margin-top:6px;overflow:hidden}
+.mc-fill{height:100%;border-radius:2px;transition:width .4s}
+
+/* EXPIRY TABS */
+.exp-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.etab{font-size:11px;font-weight:600;padding:5px 14px;border-radius:7px;border:1px solid #252b3b;background:#141720;color:#7a8499;cursor:pointer;transition:all .15s}
+.etab.on{background:#f7931a;color:#fff;border-color:#f7931a}
+
+/* BEST SIGNAL PANEL */
+.best-panel{border-radius:12px;padding:14px 16px;margin-bottom:14px;border:2px solid #00d97e66;background:#001508;position:relative;overflow:hidden;animation:flashB 2s ease-in-out infinite}
+@keyframes flashB{0%,100%{border-color:#00d97e66}50%{border-color:#00d97eff}}
+.best-panel.watch{border-color:#fbbf2466;animation:flashW 2s ease-in-out infinite;background:#1a1400}
+@keyframes flashW{0%,100%{border-color:#fbbf2466}50%{border-color:#fbbf24ff}}
+.best-panel.none{border-color:#252b3b;animation:none;background:#141720}
+.pulse{width:9px;height:9px;border-radius:50%;background:#00d97e;animation:pulse 1.5s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,217,126,.7)}70%{box-shadow:0 0 0 10px rgba(0,217,126,0)}100%{box-shadow:0 0 0 0 rgba(0,217,126,0)}}
+.bsb-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.bsb-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.bsc{background:rgba(0,0,0,.3);border-radius:8px;padding:9px 11px;border:1px solid #252b3b55}
+.bsc-lbl{font-size:10px;color:#7a8499;margin-bottom:3px;font-weight:500;text-transform:uppercase}
+.bsc-val{font-size:15px;font-weight:700}
+.bsc-sub{font-size:10px;color:#4a5168;margin-top:2px}
+.action-btn{font-size:13px;font-weight:700;padding:8px 22px;border-radius:8px;border:none;cursor:pointer;letter-spacing:.02em}
+.btn-buy{background:#00d97e;color:#000}
+.btn-watch{background:#fbbf24;color:#000}
+.btn-skip{background:#1a1e2a;color:#7a8499;border:1px solid #252b3b}
+.hint{font-size:11px;color:#7a8499;line-height:1.5;max-width:600px}
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;border:1px solid;margin-right:4px;margin-top:4px}
+.chip-bull{background:#002a12;color:#00d97e;border-color:#00d97e44}
+.chip-bear{background:#2a0010;color:#ff4d6a;border-color:#ff4d6a44}
+.chip-neu{background:#1a1e2a;color:#7a8499;border-color:#252b3b}
+
+/* TABLE */
+.sec-hdr{font-size:11px;font-weight:600;color:#7a8499;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-hdr::after{content:'';flex:1;height:1px;background:#252b3b}
+.tbl-wrap{overflow-x:auto;margin-bottom:14px;border-radius:10px;border:1px solid #252b3b}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:980px}
+thead tr{background:#1a1e2a}
+th{font-size:10px;font-weight:600;color:#7a8499;padding:9px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid #252b3b;text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
+th:hover{color:#e8ecf4}
+td{padding:8px 10px;border-bottom:1px solid #252b3b1a;color:#e8ecf4;vertical-align:middle;white-space:nowrap}
+tbody tr:hover td{background:#1a1e2a}
+tbody tr:last-child td{border-bottom:none}
+tr.best-row td{background:#00d97e0a!important}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+.tag-c{background:#002a12;color:#00d97e;border:1px solid #00d97e33}
+.tag-p{background:#2a0010;color:#ff4d6a;border:1px solid #ff4d6a33}
+.sig{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px}
+.sig-buy{background:#002a12;color:#00d97e;border:1px solid #00d97e44}
+.sig-watch{background:#1a1100;color:#fbbf24;border:1px solid #fbbf2444}
+.sig-skip{background:#1a1e2a;color:#4a5168;border:1px solid #252b3b}
+.rr{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#0a1a2a;color:#4f8ef7;border:1px solid #4f8ef733}
+.stars .s-on{color:#f7931a}
+.stars .s-off{color:#252b3b}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.panel{background:#141720;border:1px solid #252b3b;border-radius:11px;padding:13px 15px}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid #252b3b1a}
+.row:last-child{border-bottom:none}
+.row-lbl{color:#7a8499}
+.row-val{font-weight:600;font-size:12px}
+.risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.ri{background:#1a1e2a;border-radius:8px;padding:9px 11px;border:1px solid #252b3b}
+.ri-k{font-size:10px;color:#7a8499;margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.ri-v{font-size:12px;font-weight:600}
+.ts{font-size:10px;color:#4a5168;text-align:right;padding-top:8px;border-top:1px solid #252b3b}
+.no-data{text-align:center;padding:30px;color:#7a8499;font-size:13px}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.ctrl-lbl{font-size:11px;color:#7a8499;white-space:nowrap}
+select{font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid #252b3b;background:#141720;color:#e8ecf4;cursor:pointer;outline:none}
+select:focus{border-color:#f7931a}
+.rbtn{font-size:12px;font-weight:600;padding:6px 16px;border-radius:8px;border:none;background:#f7931a;color:#fff;cursor:pointer}
+.rbtn:hover{background:#c97312}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #252b3b;border-top-color:#4f8ef7;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.step{background:#141720;border:1px solid #252b3b;border-radius:11px;padding:13px}
+.snum{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;margin-bottom:8px}
+.stitle{font-size:13px;font-weight:700;color:#e8ecf4;margin-bottom:5px}
+.sbody{font-size:12px;color:#7a8499;line-height:1.7}
+.sbody strong{color:#e8ecf4}
+.sbox{background:#1a1e2a;border-radius:7px;padding:8px 10px;font-size:12px;margin-top:8px;border-left:3px solid}
+.risk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.ri{background:#141720;border:1px solid #252b3b;border-radius:9px;padding:10px 12px}
+.ri-k{font-size:10px;color:#7a8499;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.ri-v{font-size:12px;font-weight:700}
+.wbox{background:#1a0800;border:1px solid #f7931a55;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;gap:10px}
+.wbox-title{font-size:13px;font-weight:700;color:#f7931a;margin-bottom:4px}
+.wbox-body{font-size:12px;color:#c8861a;line-height:1.6}
+.prow2{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #252b3b18}
+.prow2:last-child{border-bottom:none}
+.prow2-lbl{color:#7a8499}
+.prow2-val{font-weight:600}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo">Δ</div>
+      <div>
+        <div class="brand-t">Options Signal Terminal</div>
+        <div class="brand-s">Delta Exchange India · <span style="color:#00d97e;font-weight:700">LIVE API</span> · Real Prices · Best Signal · How to Trade · 30s refresh</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="live-pill"><div class="dot"></div>LIVE</div>
+      <div class="asset-grp">
+        <button class="abtn on" id="btnBTC" onclick="setAsset('BTC')">BTC</button>
+        <button class="abtn" id="btnETH" onclick="setAsset('ETH')">ETH</button>
+      </div>
+      <button class="rbtn" onclick="loadData()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div id="statusBar" class="status-bar status-load"><span class="spinner"></span>Connecting to Delta Exchange India API...</div>
+  <div id="metricsRow" class="metrics" style="display:none"></div>
+  <div id="expTabs" class="exp-tabs" style="display:none"></div>
+  <div id="bestPanel" style="display:none"></div>
+  <div id="controls" class="controls" style="display:none">
+    <span class="ctrl-lbl">Type:</span>
+    <select id="tf" onchange="renderTable()"><option value="All">All</option><option value="CALL">CALL</option><option value="PUT">PUT</option></select>
+    <span class="ctrl-lbl">Signal:</span>
+    <select id="sf" onchange="renderTable()"><option value="All">All</option><option value="BUY">BUY only</option><option value="BUY+WATCH">BUY + WATCH</option><option value="4+">4★+</option></select>
+    <span class="ctrl-lbl">Sort:</span>
+    <select id="so" onchange="renderTable()"><option value="Signal">Signal</option><option value="Strike">Strike</option><option value="IV">IV</option><option value="OI">OI Value</option><option value="Delta">|Delta|</option></select>
+  </div>
+  <div id="chainSection" style="display:none">
+    <div class="sec-hdr">Live Option Chain — <span id="chainTitle"></span></div>
+    <div class="tbl-wrap"><table id="chainTable">
+      <thead><tr>
+        <th>Strike $</th><th>Type</th><th>Mark $</th><th>Bid $</th><th>Ask $</th><th>Entry $</th><th>Stop Loss</th><th>Target 1</th><th>Target 2</th><th>R:R</th>
+        <th>Delta</th><th>Theta/d</th><th>Vega</th><th>IV %</th><th>OI $</th><th>Volume</th><th>Signal</th><th>Rating</th>
+      </tr></thead>
+      <tbody id="chainBody"></tbody>
+    </table></div>
+  </div>
+  <div id="bottomSection" style="display:none"></div>
+  <div id="warnBox" style="display:none"></div>
+  <div id="guideSection" style="display:none"></div>
+  <div id="riskSection" style="display:none">
+    <div class="sec-hdr">Risk Management — Non-Negotiable Rules</div>
+    <div class="risk-grid" id="riskGrid"></div>
+  </div>
+  <div id="ts" class="ts"></div>
+</div>
+
+<script>
+const API = 'https://api.india.delta.exchange';
+const C = {
+  green:'#00d97e', red:'#ff4d6a', orange:'#f7931a', yellow:'#fbbf24',
+  cyan:'#22d3ee', blue:'#4f8ef7', purple:'#a78bfa', txt2:'#7a8499', border:'#252b3b'
+};
+
+let asset = 'BTC';
+let allRows = [];
+let spotPrice = 0;
+let selectedExpiry = '';
+let expiryList = [];
+let lastUpdate = '';
+
+function fmt(n, dec=2) {
+  if(n===null||n===undefined||isNaN(n)) return '—';
+  return parseFloat(n).toFixed(dec);
+}
+function fmtK(n) {
+  n = parseFloat(n)||0;
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+n.toFixed(0);
+}
+function stars(n) {
+  n = Math.round(n);
+  return Array.from({length:5},(_,i)=>
+    `<span class="${i<n?'s-on':'s-off'}">★</span>`).join('');
+}
+function sigBadge(s) {
+  const m = {BUY:['sig-buy','▲'],WATCH:['sig-watch','◉'],SKIP:['sig-skip','✕']};
+  const [cls,ic] = m[s]||m.SKIP;
+  return `<span class="sig ${cls}">${ic} ${s}</span>`;
+}
+function setStatus(msg, type='load') {
+  const el = document.getElementById('statusBar');
+  el.className = `status-bar status-${type}`;
+  el.innerHTML = type==='load'
+    ? `<span class="spinner"></span>${msg}`
+    : (type==='ok'?'✅ ':'❌ ')+msg;
+}
+
+// ─── FETCH SPOT PRICE ───
+async function fetchSpot() {
+  try {
+    const r = await fetch(`${API}/v2/tickers/BTCUSD`, {headers:{'User-Agent':'web-terminal'}});
+    const d = await r.json();
+    if(d.success) return parseFloat(d.result.spot_price)||parseFloat(d.result.mark_price)||0;
+  } catch(e){}
+  return 0;
+}
+async function fetchSpotETH() {
+  try {
+    const r = await fetch(`${API}/v2/tickers/ETHUSD`, {headers:{'User-Agent':'web-terminal'}});
+    const d = await r.json();
+    if(d.success) return parseFloat(d.result.spot_price)||parseFloat(d.result.mark_price)||0;
+  } catch(e){}
+  return 0;
+}
+
+// ─── FETCH OPTIONS CHAIN ───
+async function fetchChain(sym, expiry) {
+  const url = `${API}/v2/tickers?contract_types=call_options,put_options&underlying_asset_symbols=${sym}&expiry_date=${expiry}`;
+  const r = await fetch(url, {headers:{'User-Agent':'web-terminal'}});
+  const d = await r.json();
+  return d.success ? d.result : [];
+}
+
+// ─── FETCH PRODUCTS TO GET EXPIRY LIST ───
+async function fetchExpiries(sym) {
+  const url = `${API}/v2/products?contract_types=call_options,put_options&states=live&page_size=200`;
+  const r = await fetch(url, {headers:{'User-Agent':'web-terminal'}});
+  const d = await r.json();
+  if(!d.success) return [];
+  const products = d.result.filter(p => {
+    const ua = p.underlying_asset?.symbol || p.contract_unit_currency || '';
+    return ua === sym && p.settlement_time;
+  });
+  const expSet = new Set();
+  products.forEach(p => {
+    if(p.settlement_time) {
+      const dt = new Date(p.settlement_time);
+      const dd = String(dt.getDate()).padStart(2,'0');
+      const mm = String(dt.getMonth()+1).padStart(2,'0');
+      const yyyy = dt.getFullYear();
+      expSet.add(`${dd}-${mm}-${yyyy}`);
+    }
+  });
+  return [...expSet].sort((a,b) => {
+    const pa = a.split('-'), pb = b.split('-');
+    return new Date(`${pa[2]}-${pa[1]}-${pa[0]}`) - new Date(`${pb[2]}-${pb[1]}-${pb[0]}`);
+  });
+}
+
+// ─── SCORE LOGIC ───
+function scoreRow(r, sp) {
+  const delta = Math.abs(parseFloat(r.greeks?.delta)||0);
+  const iv = parseFloat(r.quotes?.ask_iv||r.quotes?.bid_iv||0)*100;
+  const oiChgPct = parseFloat(r.ltp_change_24h||0);
+  const mark = parseFloat(r.mark_price||0);
+  const theta = parseFloat(r.greeks?.theta||0);
+
+  let sc = 0;
+  // Delta sweet zone 0.25–0.65
+  sc += (delta>=0.35&&delta<=0.65)?2:(delta>=0.25&&delta<=0.75)?1:0;
+  // IV healthy range 15–50%
+  sc += (iv>=15&&iv<=50)?1:0;
+  // OI/volume building
+  sc += (parseFloat(r.volume||0)>50)?1:0;
+  // Theta cost manageable
+  sc += (mark>0 && Math.abs(theta)/mark < 0.12)?1:0;
+  sc = Math.min(5, Math.max(1, sc));
+
+  const sig = sc>=4?'BUY':sc===3?'WATCH':'SKIP';
+  const slAmt = mark * 0.30;
+  const sl = mark - slAmt;
+  const t1 = mark + slAmt * 1.5;
+  const t2 = mark + slAmt * 2.8;
+  const rr = slAmt>0 ? ((t1-mark)/slAmt).toFixed(1) : '—';
+
+  return { ...r, _sc:sc, _sig:sig, _sl:sl, _t1:t1, _t2:t2, _rr:rr,
+    _mark:mark, _delta:parseFloat(r.greeks?.delta||0),
+    _iv:(iv).toFixed(1),
+    _strike:parseFloat(r.strike_price||0),
+    _type:r.contract_type==='call_options'?'CALL':'PUT',
+    _oi:parseFloat(r.oi_value_usd||0),
+    _vol:parseFloat(r.volume||0),
+    _theta:parseFloat(r.greeks?.theta||0),
+    _vega:parseFloat(r.greeks?.vega||0),
+    _bid:parseFloat(r.quotes?.best_bid||0),
+    _ask:parseFloat(r.quotes?.best_ask||0),
+  };
+}
+
+// ─── RENDER METRICS ───
+function renderMetrics(spot, rows) {
+  const calls = rows.filter(r=>r._type==='CALL');
+  const puts  = rows.filter(r=>r._type==='PUT');
+  const totalOI = rows.reduce((s,r)=>s+r._oi,0);
+  const atmIV = rows.reduce((best,r)=>{
+    const d=Math.abs(r._strike-spot);
+    return (!best||d<Math.abs(best._strike-spot))?r:best;
+  },null)?._iv||'—';
+  const avgIV = (rows.reduce((s,r)=>s+parseFloat(r._iv||0),0)/rows.length||0).toFixed(1);
+  const buyCnt = rows.filter(r=>r._sig==='BUY').length;
+  const pcr = calls.length>0?(puts.length/calls.length).toFixed(2):'—';
+  const isBull = parseFloat(pcr)<1;
+
+  const items = [
+    {lbl:asset+'/USD',val:'$'+spot.toLocaleString(),sub:'Spot Price',color:'#e8ecf4',pct:50},
+    {lbl:'ATM IV',val:atmIV+'%',sub:'Implied Vol',color:'#fbbf24',pct:Math.min(parseFloat(atmIV),100)},
+    {lbl:'Avg IV',val:avgIV+'%',sub:'Chain avg',color:'#22d3ee',pct:Math.min(parseFloat(avgIV),100)},
+    {lbl:'PCR',val:pcr,sub:isBull?'↓ Bullish':'↑ Bearish',color:isBull?'#00d97e':'#ff4d6a',pct:Math.min(parseFloat(pcr)/2*100,100)},
+    {lbl:'Total OI',val:fmtK(totalOI),sub:'USD value',color:'#4f8ef7',pct:60},
+    {lbl:'BUY Signals',val:buyCnt,sub:'High conf',color:'#00d97e',pct:buyCnt/rows.length*100||0},
+  ];
+  document.getElementById('metricsRow').innerHTML = items.map(m=>`
+    <div class="mc">
+      <div class="mc-lbl">${m.lbl}</div>
+      <div class="mc-val" style="color:${m.color}">${m.val}</div>
+      <div class="mc-sub" style="color:${m.color}">${m.sub}</div>
+      <div class="mc-bar"><div class="mc-fill" style="width:${Math.min(100,Math.max(0,m.pct))}%;background:${m.color}"></div></div>
+    </div>`).join('');
+  document.getElementById('metricsRow').style.display='grid';
+}
+
+// ─── RENDER BEST SIGNAL ───
+function renderBest(rows, spot) {
+  const buys = rows.filter(r=>r._sig==='BUY').sort((a,b)=>b._sc-a._sc);
+  const watches = rows.filter(r=>r._sig==='WATCH').sort((a,b)=>b._sc-a._sc);
+  const best = buys[0] || watches[0];
+  const panel = document.getElementById('bestPanel');
+  if(!best){panel.style.display='none';return;}
+
+  const isBuy = best._sig==='BUY';
+  const panelCls = isBuy?'':'watch';
+  const bullCount = [
+    Math.abs(best._delta)>=0.35&&Math.abs(best._delta)<=0.65,
+    parseFloat(best._iv)>=15&&parseFloat(best._iv)<=50,
+    best._vol>50,
+    best._mark>0&&Math.abs(best._theta)/best._mark<0.12,
+    Math.abs(best._delta)>=0.3,
+  ].filter(Boolean).length;
+
+  const action = isBuy&&bullCount>=4?'⚡ TRADE NOW':isBuy?'✅ HIGH CONF BUY':best._sig==='WATCH'?'👁 WAIT — WATCH':'✕ SKIP';
+  const actionCls = action.includes('TRADE')||action.includes('BUY')?'btn-buy':action.includes('WATCH')?'btn-watch':'btn-skip';
+  const hint = action.includes('TRADE')
+    ? `Enter at $${fmt(best._mark)} · SL $${fmt(best._sl)} · T1 $${fmt(best._t1)} · ${bullCount}/5 criteria ✓ · Delta ${fmt(best._delta,3)}`
+    : action.includes('BUY')
+    ? `Strong setup — enter at $${fmt(best._mark)}, SL $${fmt(best._sl)} · Delta ${fmt(best._delta,3)} IV ${best._iv}%`
+    : `Wait for confirmation. Mark ≈ $${fmt(best._mark)} · Set alert and watch OI build`;
+
+  panel.style.display='block';
+  panel.innerHTML = `
+    <div class="sec-hdr">⚡ Best Signal Now</div>
+    <div class="best-panel ${panelCls}">
+      <div class="bsb-top">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="pulse"></div>
+          <span style="font-weight:800;font-size:14px;color:${isBuy?C.green:C.yellow}">${isBuy?'🔥 LIVE BUY SIGNAL':'👁 WATCH SIGNAL'}</span>
+          <span class="tag ${best._type==='CALL'?'tag-c':'tag-p'}">${best._type}</span>
+          <span style="font-weight:800;font-size:15px">$${best._strike.toLocaleString()} Strike</span>
+          <span style="font-size:12px;color:${C.txt2}">Δ ${fmt(best._delta,3)}</span>
+          <span style="font-size:12px;color:${C.yellow}">IV ${best._iv}%</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;font-weight:700;color:${C.blue};background:#0a1a2a;padding:3px 10px;border-radius:6px;border:1px solid ${C.blue}44">R:R 1:${best._rr}</span>
+          <span style="font-size:12px;font-weight:700;color:${C.orange};background:#1a0e00;padding:3px 10px;border-radius:6px;border:1px solid ${C.orange}44">${bullCount}/5 ✓</span>
+          <span class="stars">${stars(best._sc)}</span>
+        </div>
+      </div>
+      <div class="bsb-grid">
+        <div class="bsc"><div class="bsc-lbl">Mark / Entry</div><div class="bsc-val" style="color:${C.orange}">$${fmt(best._mark)}</div><div class="bsc-sub">Real Delta price</div></div>
+        <div class="bsc"><div class="bsc-lbl">Stop Loss (−30%)</div><div class="bsc-val" style="color:${C.red}">$${fmt(best._sl)}</div><div class="bsc-sub">Exit if hit</div></div>
+        <div class="bsc"><div class="bsc-lbl">Target 1 (book 50%)</div><div class="bsc-val" style="color:${C.green}">$${fmt(best._t1)}</div><div class="bsc-sub">Move SL to entry</div></div>
+        <div class="bsc"><div class="bsc-lbl">Target 2 (trail)</div><div class="bsc-val" style="color:${C.cyan}">$${fmt(best._t2)}</div><div class="bsc-sub">Trail remaining</div></div>
+      </div>
+      <div style="margin-top:6px">
+        ${[
+          {l:'Delta '+fmt(best._delta,3),b:Math.abs(best._delta)>=0.35&&Math.abs(best._delta)<=0.65},
+          {l:'IV '+best._iv+'%',b:parseFloat(best._iv)>=15&&parseFloat(best._iv)<=50},
+          {l:'Vol '+best._vol,b:best._vol>50},
+          {l:'Theta/Mark '+(best._mark>0?(Math.abs(best._theta)/best._mark*100).toFixed(1):0)+'%',b:best._mark>0&&Math.abs(best._theta)/best._mark<0.12},
+          {l:'Bid $'+fmt(best._bid),b:best._bid>0},
+          {l:'Ask $'+fmt(best._ask),b:best._ask>0},
+        ].map(c=>`<span class="chip ${c.b?'chip-bull':'chip-bear'}">${c.l}</span>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+        <button class="action-btn ${actionCls}">${action}</button>
+        <span class="hint">${hint}</span>
+      </div>
+    </div>`;
+}
+
+// ─── RENDER TABLE ───
+function renderTable() {
+  const tf = document.getElementById('tf')?.value||'All';
+  const sf = document.getElementById('sf')?.value||'All';
+  const so = document.getElementById('so')?.value||'Signal';
+  let rows = [...allRows];
+  if(tf!=='All') rows=rows.filter(r=>r._type===tf);
+  if(sf==='BUY') rows=rows.filter(r=>r._sig==='BUY');
+  else if(sf==='BUY+WATCH') rows=rows.filter(r=>r._sig!=='SKIP');
+  else if(sf==='4+') rows=rows.filter(r=>r._sc>=4);
+  if(so==='Strike') rows.sort((a,b)=>a._strike-b._strike);
+  else if(so==='IV') rows.sort((a,b)=>parseFloat(b._iv)-parseFloat(a._iv));
+  else if(so==='OI') rows.sort((a,b)=>b._oi-a._oi);
+  else if(so==='Delta') rows.sort((a,b)=>Math.abs(b._delta)-Math.abs(a._delta));
+  else rows.sort((a,b)=>b._sc-a._sc);
+
+  const bestSig = allRows.filter(r=>r._sig==='BUY').sort((a,b)=>b._sc-a._sc)[0];
+
+  document.getElementById('chainTitle').textContent = `${asset} · ${selectedExpiry} · ${rows.length} contracts`;
+  const tbody = document.getElementById('chainBody');
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="18" class="no-data">No data for this expiry. Try another expiry or click Refresh.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r=>{
+    const isBest = bestSig && r._strike===bestSig._strike && r._type===bestSig._type;
+    const dcol = Math.abs(r._delta)>=0.35&&Math.abs(r._delta)<=0.65?C.green:C.txt2;
+    return `<tr class="${isBest?'best-row':''}">
+      <td style="font-weight:700">${isBest?'👑 ':''}<span style="color:${r._strike>spotPrice?C.cyan:C.orange}">$${r._strike.toLocaleString()}</span></td>
+      <td><span class="tag ${r._type==='CALL'?'tag-c':'tag-p'}">${r._type}</span></td>
+      <td style="font-weight:700;color:${C.orange}">$${fmt(r._mark)}</td>
+      <td style="color:${C.green}">$${fmt(r._bid)}</td>
+      <td style="color:${C.red}">$${fmt(r._ask)}</td>
+      <td style="font-weight:700;color:${C.orange}">$${fmt(r._mark)}</td>
+      <td style="color:${C.red}">$${fmt(r._sl)}</td>
+      <td style="color:${C.green}">$${fmt(r._t1)}</td>
+      <td style="color:${C.cyan}">$${fmt(r._t2)}</td>
+      <td><span class="rr">1:${r._rr}</span></td>
+      <td style="color:${dcol};font-weight:600">${fmt(r._delta,3)}</td>
+      <td style="color:${C.red}">${fmt(r._theta,4)}</td>
+      <td style="color:${C.txt2}">${fmt(r._vega,4)}</td>
+      <td style="color:${parseFloat(r._iv)>50?C.yellow:C.txt2}">${r._iv}%</td>
+      <td style="color:${C.blue}">${fmtK(r._oi)}</td>
+      <td>${r._vol.toFixed(0)}</td>
+      <td>${sigBadge(r._sig)}</td>
+      <td><span class="stars">${stars(r._sc)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── EXPIRY TABS ───
+function renderExpiries(list, selected) {
+  const el = document.getElementById('expTabs');
+  el.innerHTML = list.map(e=>`
+    <button class="etab ${e===selected?'on':''}" onclick="selectExpiry('${e}')">${e}</button>
+  `).join('');
+  el.style.display='flex';
+}
+
+async function selectExpiry(exp) {
+  selectedExpiry = exp;
+  renderExpiries(expiryList, exp);
+  setStatus('Loading option chain for '+exp+' ...', 'load');
+  document.getElementById('chainSection').style.display='none';
+  document.getElementById('bestPanel').style.display='none';
+
+  try {
+    const raw = await fetchChain(asset, exp);
+    if(!raw.length){
+      setStatus('No option data for '+exp+'. Try another expiry.', 'err');
+      return;
+    }
+    allRows = raw.map(r=>scoreRow(r, spotPrice)).sort((a,b)=>b._sc-a._sc);
+    setStatus(`✅ Loaded ${allRows.length} live contracts from Delta Exchange India API · Expiry: ${exp}`, 'ok');
+    renderMetrics(spotPrice, allRows);
+    renderBest(allRows, spotPrice);
+    document.getElementById('controls').style.display='flex';
+    document.getElementById('chainSection').style.display='block';
+    renderTable();
+    renderBottom();
+    const _bestForGuide = allRows.filter(r=>r._sig==='BUY').sort((a,b)=>b._sc-a._sc)[0]
+      || allRows.filter(r=>r._sig==='WATCH').sort((a,b)=>b._sc-a._sc)[0];
+    renderGuide(_bestForGuide, asset, exp);
+    renderWarn(exp);
+    renderRisk();
+    lastUpdate = new Date().toLocaleTimeString('en-IN');
+    document.getElementById('ts').textContent = `Last update: ${lastUpdate} IST · Real data from api.india.delta.exchange · ⚠ Educational only — not financial advice`;
+  } catch(e) {
+    setStatus('API error: '+e.message, 'err');
+  }
+}
+
+function renderBottom() {
+  const spot = spotPrice;
+  const atm = allRows.reduce((best,r)=>{
+    const d=Math.abs(r._strike-spot);
+    return (!best||d<Math.abs(best._strike-spot))?r:best;
+  },null);
+
+  document.getElementById('bottomSection').style.display='grid';
+  document.getElementById('bottomSection').style.gridTemplateColumns='1fr 1fr';
+  document.getElementById('bottomSection').style.gap='10px';
+  document.getElementById('bottomSection').style.marginBottom='12px';
+  document.getElementById('bottomSection').innerHTML=`
+    <div class="panel">
+      <div class="sec-hdr" style="margin-bottom:10px">Market Snapshot</div>
+      ${[
+        ['Spot Price','$'+spot.toLocaleString(),'#e8ecf4'],
+        ['ATM Strike','$'+(atm?atm._strike.toLocaleString():'—'),'#f7931a'],
+        ['ATM IV',atm?atm._iv+'%':'—','#fbbf24'],
+        ['ATM Delta',atm?fmt(atm._delta,3):'—','#22d3ee'],
+        ['Active Expiry',selectedExpiry,'#4f8ef7'],
+        ['BUY Signals',allRows.filter(r=>r._sig==='BUY').length+' contracts','#00d97e'],
+        ['WATCH Signals',allRows.filter(r=>r._sig==='WATCH').length+' contracts','#fbbf24'],
+      ].map(([l,v,c])=>`<div class="row"><span class="row-lbl">${l}</span><span class="row-val" style="color:${c}">${v}</span></div>`).join('')}
+    </div>
+    <div class="panel">
+      <div class="sec-hdr" style="margin-bottom:10px">Risk Rules</div>
+      <div class="risk-grid">
+        ${[
+          ['Max/trade','2–3% capital'],['SL trigger','Mark −30%'],
+          ['Time limit','Exit by 2:30 PM'],['T1 hit','Move SL to entry'],
+          ['High IV (>70%)','Avoid buying'],['PCR>1.2','Buy PUTs only'],
+          ['WATCH signal','Wait — no trade'],['SL hit','Exit. No avg.'],
+        ].map(([k,v])=>`<div class="ri"><div class="ri-k">${k}</div><div class="ri-v">${v}</div></div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ─── MAIN LOAD ───
+async function loadData() {
+  setStatus('Fetching live data from api.india.delta.exchange ...', 'load');
+  document.getElementById('metricsRow').style.display='none';
+  document.getElementById('expTabs').style.display='none';
+  document.getElementById('bestPanel').style.display='none';
+  document.getElementById('controls').style.display='none';
+  document.getElementById('chainSection').style.display='none';
+  document.getElementById('bottomSection').style.display='none';
+
+  try {
+    spotPrice = asset==='BTC' ? await fetchSpot() : await fetchSpotETH();
+    if(!spotPrice) throw new Error('Could not fetch '+asset+' spot price');
+
+    setStatus('Fetching expiry dates...', 'load');
+    expiryList = await fetchExpiries(asset);
+
+    if(!expiryList.length) {
+      // fallback: use today's date format
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2,'0');
+      const mm = String(now.getMonth()+1).padStart(2,'0');
+      expiryList = [`${dd}-${mm}-${now.getFullYear()}`];
+    }
+
+    selectedExpiry = expiryList[0];
+    renderExpiries(expiryList, selectedExpiry);
+    await selectExpiry(selectedExpiry);
+
+  } catch(e) {
+    setStatus('⚠ API Error: '+e.message+'. Check CORS or network.', 'err');
+    document.getElementById('ts').textContent = 'Error at '+new Date().toLocaleTimeString('en-IN');
+  }
+}
+
+
+/* ── WARN BOX ── */
+function renderWarn(expiry) {
+  const el = document.getElementById('warnBox');
+  if(!el||!expiry){return;}
+  try{
+    const [dd,mm,yyyy] = expiry.split('-');
+    const exp = new Date(parseInt(yyyy),parseInt(mm)-1,parseInt(dd),16,0,0);
+    const diff = exp - new Date();
+    const hoursLeft = diff/3600000;
+    if(hoursLeft > 0 && hoursLeft < 12){
+      el.style.display='block';
+      const h=Math.floor(hoursLeft), m=Math.floor((diff%3600000)/60000);
+      el.innerHTML=`<div class="wbox"><div style="font-size:20px;flex-shrink:0">⚠️</div>
+      <div><div class="wbox-title">TODAY EXPIRY — ${h}h ${m}m remaining! Extreme theta decay risk.</div>
+      <div class="wbox-body">Premium loses value every minute. Only trade with very strong directional reason.
+      Exit ALL positions by <strong style="color:#f7931a">2:30 PM IST</strong>. Next expiry is safer for beginners.</div></div></div>`;
+    } else { el.style.display='none'; }
+  }catch(e){ el.style.display='none'; }
+}
+
+/* ── STEP BY STEP GUIDE ── */
+function renderGuide(best, assetSym, expiry) {
+  const el = document.getElementById('guideSection');
+  if(!el||!best){ if(el)el.style.display='none'; return; }
+  const mark   = parseFloat(best._mark||best.mark||0);
+  const sl     = parseFloat(best._sl||best.sl||0);
+  const t1     = parseFloat(best._t1||best.t1||0);
+  const t2     = parseFloat(best._t2||best.t2||0);
+  const rr     = best._rr||best.rr||'—';
+  const strike = parseFloat(best._strike||best.strike||0);
+  const type   = best._type||best.type||'';
+  const delta  = parseFloat(best._delta||best.delta||0);
+  const iv     = parseFloat(best._iv||best.iv||0);
+  const bid    = parseFloat(best._bid||best.bid||0);
+  const ask    = parseFloat(best._ask||best.ask||0);
+  const isBuy  = (best._sig||best.sig) === 'BUY';
+  const pctT1  = mark>0?((t1-mark)/mark*100).toFixed(0):0;
+  const pctT2  = mark>0?((t2-mark)/mark*100).toFixed(0):0;
+  const ivNote = iv<=25?'✅ LOW — cheap to buy now':iv<=45?'⚠ Moderate — ok to trade':'❌ HIGH — avoid buying';
+  const dNote  = Math.abs(delta)>=0.4&&Math.abs(delta)<=0.6?'✅ ATM — maximum leverage':'Good zone — near ATM';
+
+  el.style.display = 'block';
+  el.innerHTML = `
+  <div class="sec-hdr" style="margin-bottom:10px">⚡ How to Trade This Signal — Step by Step on Delta Exchange</div>
+  <div class="steps">
+    <div class="step">
+      <div class="snum" style="background:#f7931a">1</div>
+      <div class="stitle">Open Delta Exchange India</div>
+      <div class="sbody">Go to <strong>delta.exchange/india</strong><br>
+      Click <strong>Options</strong> → Select <strong>${assetSym}</strong><br>
+      Choose Expiry: <strong>${expiry}</strong><br>
+      Find Strike: <strong>$${strike.toLocaleString()} ${type}</strong></div>
+      <div class="sbox" style="border-color:#f7931a;color:#c8861a">delta.exchange/app/options_chain/trade/${assetSym}</div>
+    </div>
+    <div class="step">
+      <div class="snum" style="background:#4f8ef7">2</div>
+      <div class="stitle">Verify These Prices on Delta Screen</div>
+      <div class="sbody">
+        <strong>Mark Price:</strong> $${mark.toFixed(4)} ← your entry<br>
+        <strong>Bid:</strong> $${bid.toFixed(4)} · <strong>Ask:</strong> $${ask.toFixed(4)}<br>
+        <strong>IV ${iv.toFixed(1)}%</strong> — ${ivNote}<br>
+        <strong>Delta ${delta.toFixed(3)}</strong> — ${dNote}
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum" style="background:#00d97e">3</div>
+      <div class="stitle">Place the Buy Order</div>
+      <div class="sbody">
+        Click <strong>${type}</strong> at strike <strong>$${strike.toLocaleString()}</strong><br>
+        Order: <strong>Limit @ $${mark.toFixed(4)}</strong><br>
+        Qty: <strong>Start 1 lot only</strong> (0.001 ${assetSym})<br>
+        Use <strong>Bracket Order</strong> to set SL+TP together.
+      </div>
+      <div class="sbox" style="border-color:#00d97e;color:#00d97e">
+        ${type} → Buy → Limit $${mark.toFixed(4)} → 1 lot → Submit
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum" style="background:#ff4d6a">4</div>
+      <div class="stitle">Set Stop Loss IMMEDIATELY</div>
+      <div class="sbody">
+        <strong style="color:#ff4d6a">SL = $${sl.toFixed(4)}</strong> (−30% from entry)<br>
+        Premium drops to $${sl.toFixed(4)} → <strong style="color:#ff4d6a">EXIT. NOW.</strong><br>
+        Use <strong>Bracket Order</strong> or Stop Market order.<br>
+        <strong style="color:#ff4d6a">⚠ Never skip SL. Never average a loser.</strong>
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum" style="background:#22d3ee">5</div>
+      <div class="stitle">Book Profits at Targets</div>
+      <div class="sbody">
+        <strong>Target 1 → $${t1.toFixed(4)}</strong> (+${pctT1}%)<br>
+        → Sell <strong>50% qty</strong>. Move SL to entry.<br><br>
+        <strong>Target 2 → $${t2.toFixed(4)}</strong> (+${pctT2}%)<br>
+        → Trail SL. <strong>R:R = 1:${rr}</strong>
+      </div>
+      <div class="sbox" style="border-color:#22d3ee;color:#22d3ee">
+        T1 hit → sell 50% → SL to $${mark.toFixed(4)} → trail to $${t2.toFixed(4)}
+      </div>
+    </div>
+    <div class="step">
+      <div class="snum" style="background:#a78bfa">6</div>
+      <div class="stitle">Exit Rules — No Exceptions</div>
+      <div class="sbody">
+        ⏰ <strong>Exit ALL by 2:30 PM IST</strong> — theta kills premium fast<br>
+        🔴 SL hit → EXIT immediately. No hope.<br>
+        ✅ T1 hit → Book 50%, move SL to entry.<br>
+        ❌ Never hold to expiry unless deep ITM.<br>
+        💰 <strong>Max 2–3% of capital per trade.</strong>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── RISK RULES ── */
+function renderRisk() {
+  const el = document.getElementById('riskSection');
+  const g  = document.getElementById('riskGrid');
+  if(!el||!g) return;
+  el.style.display = 'block';
+  g.innerHTML = [
+    ['Max/trade','2–3% capital','#ff4d6a'],
+    ['Stop Loss','Mark −30% → exit','#ff4d6a'],
+    ['Time exit','2:30 PM IST','#fbbf24'],
+    ['T1 hit','Move SL to entry','#00d97e'],
+    ['IV > 50%','Don\'t buy premium','#ff4d6a'],
+    ['PCR > 1.2','Only buy PUTs','#fbbf24'],
+    ['WATCH signal','Wait — no entry','#fbbf24'],
+    ['SL hit','Exit. Never avg.','#ff4d6a'],
+  ].map(([k,v,c])=>`<div class="ri"><div class="ri-k">${k}</div><div class="ri-v" style="color:${c}">${v}</div></div>`).join('');
+}
+
+window.setAsset = function(a) {
+  asset=a;
+  document.getElementById('btnBTC').className='abtn'+(a==='BTC'?' on':'');
+  document.getElementById('btnETH').className='abtn'+(a==='ETH'?' on':'');
+  loadData();
+};
+window.selectExpiry = selectExpiry;
+window.renderTable = renderTable;
+
+// Auto refresh every 30s
+setInterval(()=>{if(selectedExpiry)selectExpiry(selectedExpiry)}, 30000);
+
+loadData();
+</script>
+</body>
+</html>
